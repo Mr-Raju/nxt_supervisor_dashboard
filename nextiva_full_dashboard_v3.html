@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nextiva NCC — Full AI Dashboard v3</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --color-background-primary:#ffffff;
+  --color-background-secondary:#f5f5f4;
+  --color-background-tertiary:#eeede8;
+  --color-background-info:#e6f1fb;
+  --color-background-success:#eaf3de;
+  --color-background-warning:#faeeda;
+  --color-background-danger:#fcebeb;
+  --color-text-primary:#1a1a18;
+  --color-text-secondary:#5f5e5a;
+  --color-text-info:#185fa5;
+  --color-text-success:#3b6d11;
+  --color-text-warning:#854f0b;
+  --color-text-danger:#a32d2d;
+  --color-border-tertiary:rgba(0,0,0,0.12);
+  --color-border-secondary:rgba(0,0,0,0.22);
+  --color-border-info:#b5d4f4;
+  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --border-radius-md:8px;
+  --border-radius-lg:12px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --color-background-primary:#1c1c1a;
+    --color-background-secondary:#252523;
+    --color-background-tertiary:#2c2c2a;
+    --color-background-info:#0c447c;
+    --color-background-success:#27500a;
+    --color-background-warning:#633806;
+    --color-background-danger:#791f1f;
+    --color-text-primary:#f0efe8;
+    --color-text-secondary:#b4b2a9;
+    --color-text-info:#85b7eb;
+    --color-text-success:#c0dd97;
+    --color-text-warning:#fac775;
+    --color-text-danger:#f09595;
+    --color-border-tertiary:rgba(255,255,255,0.10);
+    --color-border-secondary:rgba(255,255,255,0.18);
+    --color-border-info:#0c447c;
+  }
+}
+body{font-family:var(--font-sans);background:var(--color-background-tertiary);color:var(--color-text-primary);min-height:100vh}
+.page{max-width:1200px;margin:0 auto;padding:1rem 1rem 2rem}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:8px}
+.brand{display:flex;align-items:center;gap:8px}
+.brand-name{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.brand-name span{color:#3266ad}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#22c55e}
+.live-txt{font-size:10px;color:var(--color-text-success);font-weight:500;letter-spacing:.4px}
+.badge{font-size:10px;padding:2px 7px;border-radius:10px;background:var(--color-background-info);color:var(--color-text-info);font-weight:500}
+.tr{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.fp{font-size:11px;padding:3px 9px;border-radius:16px;border:.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);cursor:pointer;font-family:var(--font-sans);transition:all .15s}
+.fp.on,.fp:hover{background:var(--color-background-info);color:var(--color-text-info);border-color:transparent}
+select{font-size:11px;padding:3px 7px;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);font-family:var(--font-sans)}
+
+.tabs{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:.85rem}
+.tab{font-size:11px;padding:4px 11px;border-radius:16px;border:.5px solid var(--color-border-tertiary);background:transparent;color:var(--color-text-secondary);cursor:pointer;transition:all .15s;font-family:var(--font-sans)}
+.tab.on{background:var(--color-background-info);color:var(--color-text-info);border-color:transparent}
+.tab:hover:not(.on){background:var(--color-background-secondary)}
+
+.sec{display:none}.sec.on{display:block}
+
+.kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:7px;margin-bottom:.85rem}
+.kpi{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:9px 11px;position:relative;overflow:hidden}
+.kpi-bar{position:absolute;left:0;top:0;width:3px;height:100%}
+.kl{font-size:10px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.kv{font-size:19px;font-weight:500;color:var(--color-text-primary);line-height:1.1}
+.ks{font-size:10px;margin-top:2px;color:var(--color-text-secondary)}
+.ks .up{color:var(--color-text-success)}.ks .dn{color:var(--color-text-danger)}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:9px}
+.card{background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px}
+.mb9{margin-bottom:9px}
+.ch{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;gap:6px;flex-wrap:wrap}
+.ct{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.cm{font-size:10px;color:var(--color-text-secondary)}
+.cw{position:relative;width:100%}
+
+.leg{display:flex;flex-wrap:wrap;gap:8px}
+.li{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--color-text-secondary)}
+.ls{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+.pill{font-size:9px;padding:1px 6px;border-radius:8px;font-weight:500;white-space:nowrap}
+.p-ok{background:var(--color-background-success);color:var(--color-text-success)}
+.p-warn{background:var(--color-background-warning);color:var(--color-text-warning)}
+.p-danger{background:var(--color-background-danger);color:var(--color-text-danger)}
+.p-info{background:var(--color-background-info);color:var(--color-text-info)}
+.p-neu{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{font-size:10px;color:var(--color-text-secondary);text-align:left;padding:4px 6px;border-bottom:.5px solid var(--color-border-tertiary);font-weight:400}
+.tbl td{padding:5px 6px;border-bottom:.5px solid var(--color-border-tertiary);color:var(--color-text-primary)}
+.tbl tr:last-child td{border:none}
+
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:3px}
+.dg{background:#639922}.da{background:#EF9F27}.dr{background:#E24B4A}.db{background:#3266ad}
+
+.pbar{height:4px;border-radius:2px;background:var(--color-background-secondary);overflow:hidden;margin-top:2px}
+.pfill{height:100%;border-radius:2px}
+
+.srow{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.sc{width:50px;font-size:10px;color:var(--color-text-secondary);text-align:right;flex-shrink:0}
+.sb{flex:1;height:6px;border-radius:3px;background:var(--color-background-secondary);overflow:hidden;display:flex}
+.ss{height:100%}
+.sv{display:flex;gap:3px;font-size:9px;width:84px;flex-shrink:0}
+.sp{color:#639922}.sn{color:#EF9F27}.sg{color:#E24B4A}
+
+.srcrow{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:.5px solid var(--color-border-tertiary)}
+.srcrow:last-child{border:none}
+.srcico{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0}
+.srcnm{font-size:11px;color:var(--color-text-primary);width:60px;flex-shrink:0}
+.srcbw{flex:1;height:4px;background:var(--color-background-secondary);border-radius:2px;overflow:hidden}
+.srcbf{height:100%;border-radius:2px}
+.srcc{font-size:11px;font-weight:500;color:var(--color-text-primary);width:34px;text-align:right;flex-shrink:0}
+.srcd{font-size:9px;width:28px;text-align:right;flex-shrink:0}
+
+.ai-box{background:var(--color-background-info);border:.5px solid var(--color-border-info);border-radius:var(--border-radius-lg);padding:10px 12px;margin-bottom:8px}
+.ai-hdr{font-size:10px;font-weight:500;color:var(--color-text-info);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.ai-dot{width:5px;height:5px;border-radius:50%;background:var(--color-text-info)}
+.ai-row{font-size:11px;color:var(--color-text-primary);margin-bottom:3px;padding-left:10px;border-left:2px solid var(--color-border-info)}
+.ai-row:last-child{margin-bottom:0}
+
+.stat2{display:flex;justify-content:space-between;font-size:10px;color:var(--color-text-secondary);margin-top:6px;flex-wrap:wrap;gap:4px}
+.wf-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:.5px solid var(--color-border-tertiary);font-size:11px}
+.wf-row:last-child{border:none}
+
+.ag-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:6px 8px}
+.ag-lbl{font-size:9px;color:var(--color-text-secondary);margin-bottom:1px}
+.ag-val{font-size:14px;font-weight:500}
+
+.timeline{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.tl-item{display:flex;align-items:flex-start;gap:8px;font-size:11px}
+.tl-time{font-size:10px;color:var(--color-text-secondary);width:42px;flex-shrink:0}
+.tl-txt{color:var(--color-text-primary);flex:1}
+
+@media(max-width:700px){.g2,.g3{grid-template-columns:1fr}.kgrid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="topbar">
+  <div class="brand">
+    <span class="brand-name"><span>Nextiva</span> NCC</span>
+    <div style="display:flex;align-items:center;gap:3px"><div class="live-dot"></div><span class="live-txt">LIVE</span></div>
+    <span class="badge">AI Dashboard</span>
+  </div>
+  <div class="tr">
+    <button class="fp on" onclick="setPeriod(this)">Today</button>
+    <button class="fp" onclick="setPeriod(this)">Yesterday</button>
+    <button class="fp" onclick="setPeriod(this)">This week</button>
+    <select><option>All queues</option><option>Sales</option><option>Support</option><option>Billing</option></select>
+    <select><option>All channels</option><option>Voice</option><option>Chat</option><option>Email</option></select>
+    <span style="font-size:10px;color:var(--color-text-secondary)" id="clk"></span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab on" onclick="sw('ov',this)">Overview</button>
+  <button class="tab" onclick="sw('ag',this)">Agent metrics</button>
+  <button class="tab" onclick="sw('ca',this)">Calling metrics</button>
+  <button class="tab" onclick="sw('so',this)">Social &amp; tickets</button>
+  <button class="tab" onclick="sw('bo',this)">BOT metrics</button>
+  <button class="tab" onclick="sw('wf',this)">Workflows</button>
+  <button class="tab" onclick="sw('br',this)">Break metrics</button>
+  <button class="tab" onclick="sw('ai',this)">AI insights</button>
+  <button class="tab" onclick="sw('am',this)">Agentic</button>
+</div>
+
+<!-- ═══ OVERVIEW ═══════════════════════════════════════════════════════ -->
+<div class="sec on" id="sec-ov">
+  <div class="ai-box">
+    <div class="ai-hdr"><div class="ai-dot"></div>AI surface · 3 active signals right now</div>
+    <div class="ai-row">Technical queue SLA at 78% — below 80% threshold. Re-routing 2 agents from Billing recommended.</div>
+    <div class="ai-row">Negative sentiment +6pts on chat in last 30 min. Correlates with 09:15 AM product deploy.</div>
+    <div class="ai-row">John D. AHT spiked +40% over 2 hrs. Auto-coaching session queued for 11:00 AM.</div>
+  </div>
+  <div class="kgrid">
+    <div class="kpi"><div class="kpi-bar" style="background:#3266ad"></div><div class="kl">Interactions</div><div class="kv">4,821</div><div class="ks"><span class="up">+12%</span> vs yesterday</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#1D9E75"></div><div class="kl">AI / BOT handled</div><div class="kv">38%</div><div class="ks"><span class="up">+5pts</span> containment</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#7F77DD"></div><div class="kl">CSAT score</div><div class="kv">4.6</div><div class="ks"><span class="up">+0.2</span> / 5.0 target</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#EF9F27"></div><div class="kl">Avg handle time</div><div class="kv">4:12</div><div class="ks"><span class="up">-18s</span> vs target</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#639922"></div><div class="kl">SLA compliance</div><div class="kv">92%</div><div class="ks">→ on target</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#D4537E"></div><div class="kl">Agents online</div><div class="kv">47/56</div><div class="ks">9 on break</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#E24B4A"></div><div class="kl">Abandon rate</div><div class="kv">3.2%</div><div class="ks"><span class="up">-0.8pts</span> improving</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#378ADD"></div><div class="kl">FCR rate</div><div class="kv">78%</div><div class="ks"><span class="up">+3pts</span> first contact</div></div>
+  </div>
+  <div class="card mb9">
+    <div class="ch">
+      <div><div class="ct">Hourly volume — stacked by source</div><div class="cm">8 AM – now · all channels</div></div>
+      <div class="leg">
+        <span class="li"><span class="ls" style="background:#3266ad"></span>Voice 2,914</span>
+        <span class="li"><span class="ls" style="background:#1D9E75"></span>Chat 892</span>
+        <span class="li"><span class="ls" style="background:#EF9F27"></span>Email 648</span>
+        <span class="li"><span class="ls" style="background:#D4537E"></span>Social 231</span>
+        <span class="li"><span class="ls" style="background:#7F77DD"></span>SMS 136</span>
+      </div>
+    </div>
+    <div class="cw" style="height:190px"><canvas id="c_ov_stack"></canvas></div>
+    <div style="margin-top:9px;padding-top:8px;border-top:.5px solid var(--color-border-tertiary)">
+      <div style="font-size:10px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Source share · today total</div>
+      <div class="srcrow"><div class="srcico" style="background:#E6F1FB;color:#0C447C">VC</div><span class="srcnm">Voice</span><div class="srcbw"><div class="srcbf" style="width:60%;background:#3266ad"></div></div><span class="srcc">2,914</span><span class="srcd" style="color:var(--color-text-success)">+8%</span></div>
+      <div class="srcrow"><div class="srcico" style="background:#E1F5EE;color:#085041">CH</div><span class="srcnm">Chat</span><div class="srcbw"><div class="srcbf" style="width:18%;background:#1D9E75"></div></div><span class="srcc">892</span><span class="srcd" style="color:var(--color-text-success)">+14%</span></div>
+      <div class="srcrow"><div class="srcico" style="background:#FAEEDA;color:#633806">EM</div><span class="srcnm">Email</span><div class="srcbw"><div class="srcbf" style="width:13%;background:#EF9F27"></div></div><span class="srcc">648</span><span class="srcd" style="color:var(--color-text-secondary)">+2%</span></div>
+      <div class="srcrow"><div class="srcico" style="background:#FBEAF0;color:#72243E">SC</div><span class="srcnm">Social</span><div class="srcbw"><div class="srcbf" style="width:5%;background:#D4537E"></div></div><span class="srcc">231</span><span class="srcd" style="color:var(--color-text-success)">+21%</span></div>
+      <div class="srcrow"><div class="srcico" style="background:#EEEDFE;color:#3C3489">SM</div><span class="srcnm">SMS</span><div class="srcbw"><div class="srcbf" style="width:3%;background:#7F77DD"></div></div><span class="srcc">136</span><span class="srcd" style="color:var(--color-text-danger)">-3%</span></div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">Sentiment by source</div><div class="cm">Pos / Neu / Neg %</div></div>
+      <div class="srow"><span class="sc">Voice</span><div class="sb"><div class="ss" style="width:68%;background:#639922"></div><div class="ss" style="width:20%;background:#EF9F27"></div><div class="ss" style="width:12%;background:#E24B4A"></div></div><div class="sv"><span class="sp">68%</span><span class="sn">20%</span><span class="sg">12%</span></div></div>
+      <div class="srow"><span class="sc">Chat</span><div class="sb"><div class="ss" style="width:55%;background:#639922"></div><div class="ss" style="width:25%;background:#EF9F27"></div><div class="ss" style="width:20%;background:#E24B4A"></div></div><div class="sv"><span class="sp">55%</span><span class="sn">25%</span><span class="sg">20%</span></div></div>
+      <div class="srow"><span class="sc">Email</span><div class="sb"><div class="ss" style="width:71%;background:#639922"></div><div class="ss" style="width:22%;background:#EF9F27"></div><div class="ss" style="width:7%;background:#E24B4A"></div></div><div class="sv"><span class="sp">71%</span><span class="sn">22%</span><span class="sg">7%</span></div></div>
+      <div class="srow"><span class="sc">Social</span><div class="sb"><div class="ss" style="width:42%;background:#639922"></div><div class="ss" style="width:28%;background:#EF9F27"></div><div class="ss" style="width:30%;background:#E24B4A"></div></div><div class="sv"><span class="sp">42%</span><span class="sn">28%</span><span class="sg">30%</span></div></div>
+      <div class="srow"><span class="sc">SMS</span><div class="sb"><div class="ss" style="width:60%;background:#639922"></div><div class="ss" style="width:28%;background:#EF9F27"></div><div class="ss" style="width:12%;background:#E24B4A"></div></div><div class="sv"><span class="sp">60%</span><span class="sn">28%</span><span class="sg">12%</span></div></div>
+      <div style="margin-top:8px;padding-top:6px;border-top:.5px solid var(--color-border-tertiary);font-size:10px;color:var(--color-text-danger);font-weight:500">⚠ Social negative spike — review immediately</div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">Queue SLA compliance</div><div class="cm">Target: 85%</div></div>
+      <table class="tbl">
+        <tr><th>Queue</th><th>SLA</th><th>Wait</th><th>Status</th></tr>
+        <tr><td><span class="dot dg"></span>Sales</td><td><div style="font-size:11px;font-weight:500">95%</div><div class="pbar"><div class="pfill" style="width:95%;background:#639922"></div></div></td><td>0:48</td><td><span class="pill p-ok">Healthy</span></td></tr>
+        <tr><td><span class="dot dg"></span>Billing</td><td><div style="font-size:11px;font-weight:500">91%</div><div class="pbar"><div class="pfill" style="width:91%;background:#639922"></div></div></td><td>1:02</td><td><span class="pill p-ok">Healthy</span></td></tr>
+        <tr><td><span class="dot dg"></span>Onboard</td><td><div style="font-size:11px;font-weight:500">94%</div><div class="pbar"><div class="pfill" style="width:94%;background:#639922"></div></div></td><td>0:55</td><td><span class="pill p-ok">Healthy</span></td></tr>
+        <tr><td><span class="dot da"></span>Support</td><td><div style="font-size:11px;font-weight:500">89%</div><div class="pbar"><div class="pfill" style="width:89%;background:#EF9F27"></div></div></td><td>1:34</td><td><span class="pill p-warn">Watch</span></td></tr>
+        <tr><td><span class="dot dr"></span>Technical</td><td><div style="font-size:11px;font-weight:500">78%</div><div class="pbar"><div class="pfill" style="width:78%;background:#E24B4A"></div></div></td><td>2:18</td><td><span class="pill p-danger">Breach</span></td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ AGENT METRICS ══════════════════════════════════════════════════ -->
+<div class="sec" id="sec-ag">
+  <div class="kgrid">
+    <div class="kpi"><div class="kpi-bar" style="background:#3266ad"></div><div class="kl">Total agents</div><div class="kv">56</div><div class="ks">Active today</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#639922"></div><div class="kl">Avg occupancy</div><div class="kv">81%</div><div class="ks"><span class="up">+4pts</span> vs target</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#EF9F27"></div><div class="kl">Avg AHT</div><div class="kv">4:12</div><div class="ks"><span class="up">-18s</span> improving</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#7F77DD"></div><div class="kl">Avg CSAT</div><div class="kv">4.6</div><div class="ks"><span class="up">+0.2</span> / 5.0</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#1D9E75"></div><div class="kl">AI assist rate</div><div class="kv">74%</div><div class="ks"><span class="up">+8pts</span> adoption</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#D4537E"></div><div class="kl">QA avg score</div><div class="kv">87%</div><div class="ks"><span class="up">+2pts</span> coached</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#378ADD"></div><div class="kl">FCR rate</div><div class="kv">78%</div><div class="ks"><span class="up">+3pts</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#E24B4A"></div><div class="kl">Transfer rate</div><div class="kv">6.4%</div><div class="ks"><span class="up">↓ improving</span></div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">Agent status · real-time</div><div class="cm">47 / 56 online</div></div>
+      <div class="cw" style="height:155px"><canvas id="c_ag_donut"></canvas></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px">
+        <div class="ag-card"><div class="ag-lbl">Available</div><div class="ag-val" style="color:#639922">28</div></div>
+        <div class="ag-card"><div class="ag-lbl">On call</div><div class="ag-val" style="color:#3266ad">12</div></div>
+        <div class="ag-card"><div class="ag-lbl">Wrap-up</div><div class="ag-val" style="color:#EF9F27">6</div></div>
+        <div class="ag-card"><div class="ag-lbl">On break</div><div class="ag-val" style="color:#D4537E">9</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">Top performers today</div><div class="cm">Handled · AHT · CSAT · AI use</div></div>
+      <table class="tbl">
+        <tr><th>Agent</th><th>Handled</th><th>AHT</th><th>CSAT</th><th>FCR</th><th>AI%</th></tr>
+        <tr><td>Sarah M.</td><td>62</td><td>3:40</td><td>4.9</td><td>85%</td><td><span class="pill p-ok">88%</span></td></tr>
+        <tr><td>Raj K.</td><td>58</td><td>3:55</td><td>4.8</td><td>82%</td><td><span class="pill p-ok">82%</span></td></tr>
+        <tr><td>Priya S.</td><td>55</td><td>4:02</td><td>4.7</td><td>80%</td><td><span class="pill p-ok">79%</span></td></tr>
+        <tr><td>Tom B.</td><td>51</td><td>4:20</td><td>4.6</td><td>79%</td><td><span class="pill p-warn">74%</span></td></tr>
+        <tr><td>Anita L.</td><td>49</td><td>4:35</td><td>4.5</td><td>77%</td><td><span class="pill p-warn">71%</span></td></tr>
+        <tr><td>Dev R.</td><td>44</td><td>4:50</td><td>4.3</td><td>74%</td><td><span class="pill p-danger">64%</span></td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">AHT by agent vs team avg</div><div class="cm">Target: 4:30</div></div>
+      <div class="cw" style="height:160px"><canvas id="c_ag_aht"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">CSAT trend · hourly</div><div class="cm">All agents combined</div></div>
+      <div class="cw" style="height:160px"><canvas id="c_ag_csat"></canvas></div>
+    </div>
+  </div>
+  <div class="card mb9">
+    <div class="ch"><div class="ct">Occupancy &amp; utilisation by agent</div><div class="cm">Handle time vs available vs aux</div></div>
+    <div class="cw" style="height:160px"><canvas id="c_ag_occ"></canvas></div>
+  </div>
+</div>
+
+<!-- ═══ CALLING METRICS ════════════════════════════════════════════════ -->
+<div class="sec" id="sec-ca">
+  <div class="kgrid">
+    <div class="kpi"><div class="kpi-bar" style="background:#3266ad"></div><div class="kl">Total calls</div><div class="kv">2,914</div><div class="ks"><span class="up">+8%</span> today</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#639922"></div><div class="kl">Answered</div><div class="kv">2,821</div><div class="ks">96.8% answer rate</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#E24B4A"></div><div class="kl">Abandoned</div><div class="kv">93</div><div class="ks"><span class="up">3.2% ↓</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#EF9F27"></div><div class="kl">Avg wait time</div><div class="kv">1:24</div><div class="ks"><span class="up">-12s</span> faster</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#7F77DD"></div><div class="kl">Avg talk time</div><div class="kv">3:48</div><div class="ks">steady</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#D4537E"></div><div class="kl">Transferred</div><div class="kv">187</div><div class="ks"><span class="up">6.4% ↓</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#1D9E75"></div><div class="kl">IVR deflection</div><div class="kv">22%</div><div class="ks"><span class="up">+3pts</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#378ADD"></div><div class="kl">Recording</div><div class="kv">100%</div><div class="ks">compliant</div></div>
+  </div>
+  <div class="card mb9">
+    <div class="ch">
+      <div><div class="ct">Call volume by hour — inbound / outbound / IVR deflected / abandoned</div><div class="cm">Source-wise stacked breakdown</div></div>
+      <div class="leg">
+        <span class="li"><span class="ls" style="background:#3266ad"></span>Inbound</span>
+        <span class="li"><span class="ls" style="background:#1D9E75"></span>Outbound</span>
+        <span class="li"><span class="ls" style="background:#7F77DD"></span>IVR deflected</span>
+        <span class="li"><span class="ls" style="background:#E24B4A"></span>Abandoned</span>
+      </div>
+    </div>
+    <div class="cw" style="height:180px"><canvas id="c_ca_vol"></canvas></div>
+    <div class="stat2">
+      <span>Peak hour <strong style="color:var(--color-text-primary)">10am (420)</strong></span>
+      <span>Slowest <strong style="color:var(--color-text-primary)">8am (180)</strong></span>
+      <span>Avg per hour <strong style="color:var(--color-text-primary)">324</strong></span>
+      <span>Callback pending <strong style="color:var(--color-text-warning)">14</strong></span>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">Call outcomes</div><div class="cm">By disposition</div></div>
+      <div class="cw" style="height:170px"><canvas id="c_ca_outcomes"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">SLA by queue · inbound voice</div><div class="cm">Answer within 30s target</div></div>
+      <table class="tbl">
+        <tr><th>Queue</th><th>Calls</th><th>SLA%</th><th>ASA</th><th>Abandon%</th></tr>
+        <tr><td><span class="dot dg"></span>Sales</td><td>812</td><td><span style="color:#639922;font-weight:500">95%</span></td><td>0:22</td><td>1.8%</td></tr>
+        <tr><td><span class="dot dg"></span>Billing</td><td>624</td><td><span style="color:#639922;font-weight:500">91%</span></td><td>0:28</td><td>2.1%</td></tr>
+        <tr><td><span class="dot da"></span>Support</td><td>742</td><td><span style="color:#EF9F27;font-weight:500">89%</span></td><td>0:34</td><td>4.2%</td></tr>
+        <tr><td><span class="dot dr"></span>Technical</td><td>518</td><td><span style="color:#E24B4A;font-weight:500">78%</span></td><td>0:58</td><td>6.8%</td></tr>
+        <tr><td><span class="dot dg"></span>Onboard</td><td>218</td><td><span style="color:#639922;font-weight:500">94%</span></td><td>0:24</td><td>1.4%</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">Abandon rate vs wait time · hourly</div><div class="cm">Correlation · dual axis</div></div>
+      <div class="cw" style="height:150px"><canvas id="c_ca_abandon"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">IVR path performance</div><div class="cm">Top flows · deflection rate</div></div>
+      <table class="tbl">
+        <tr><th>IVR flow</th><th>Routed</th><th>Deflected</th><th>Rate</th></tr>
+        <tr><td>Account balance</td><td>412</td><td>318</td><td><span class="pill p-ok">77%</span></td></tr>
+        <tr><td>Password reset</td><td>276</td><td>198</td><td><span class="pill p-ok">72%</span></td></tr>
+        <tr><td>Order status</td><td>318</td><td>210</td><td><span class="pill p-ok">66%</span></td></tr>
+        <tr><td>Billing FAQ</td><td>198</td><td>112</td><td><span class="pill p-warn">57%</span></td></tr>
+        <tr><td>Tech support</td><td>248</td><td>88</td><td><span class="pill p-danger">35%</span></td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SOCIAL & TICKETS ═══════════════════════════════════════════════ -->
+<div class="sec" id="sec-so">
+  <div class="kgrid">
+    <div class="kpi"><div class="kpi-bar" style="background:#E24B4A"></div><div class="kl">Open tickets</div><div class="kv">342</div><div class="ks"><span class="dn">+14 new</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#639922"></div><div class="kl">Resolved today</div><div class="kv">218</div><div class="ks"><span class="up">+22%</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#3266ad"></div><div class="kl">Avg first response</div><div class="kv">6:30</div><div class="ks"><span class="up">-2m</span> faster</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#7F77DD"></div><div class="kl">Social mentions</div><div class="kv">1,204</div><div class="ks">monitored live</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#D4537E"></div><div class="kl">Escalated</div><div class="kv">28</div><div class="ks"><span class="up">↓ 8%</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#1D9E75"></div><div class="kl">AI classified</div><div class="kv">91%</div><div class="ks">auto-routed</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#EF9F27"></div><div class="kl">Avg resolution</div><div class="kv">4.2h</div><div class="ks"><span class="up">-0.8h</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#378ADD"></div><div class="kl">Reopen rate</div><div class="kv">4.1%</div><div class="ks"><span class="up">-0.6pts</span></div></div>
+  </div>
+  <div class="card mb9">
+    <div class="ch">
+      <div><div class="ct">Ticket volume by channel · hourly</div><div class="cm">Stacked by social source</div></div>
+      <div class="leg">
+        <span class="li"><span class="ls" style="background:#3266ad"></span>Email</span>
+        <span class="li"><span class="ls" style="background:#1D9E75"></span>Chat</span>
+        <span class="li"><span class="ls" style="background:#1DA1F2"></span>Twitter/X</span>
+        <span class="li"><span class="ls" style="background:#1877F2"></span>Facebook</span>
+        <span class="li"><span class="ls" style="background:#E1306C"></span>Instagram</span>
+        <span class="li"><span class="ls" style="background:#25D366"></span>WhatsApp</span>
+      </div>
+    </div>
+    <div class="cw" style="height:175px"><canvas id="c_so_vol"></canvas></div>
+    <div style="margin-top:9px;padding-top:7px;border-top:.5px solid var(--color-border-tertiary)">
+      <div style="font-size:10px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Channel breakdown · today</div>
+      <div class="srcrow"><div class="srcico" style="background:#E6F1FB;color:#0C447C">EM</div><span class="srcnm">Email</span><div class="srcbw"><div class="srcbf" style="width:42%;background:#3266ad"></div></div><span class="srcc">142</span><span class="srcd" style="color:var(--color-text-secondary)">+2%</span></div>
+      <div class="srcrow"><div class="srcico" style="background:#E1F5EE;color:#085041">CH</div><span class="srcnm">Chat</span><div class="srcbw"><div class="srcbf" style="width:29%;background:#1D9E75"></div></div><span class="srcc">98</span><span class="srcd" style="color:var(--color-text-success)">+12%</span></div>
+      <div class="srcrow"><div class="srcico" style="background:#E6F4FF;color:#0C3A6A">TW</div><span class="srcnm">Twitter/X</span><div class="srcbw"><div class="srcbf" style="width:15%;background:#1DA1F2"></div></div><span class="srcc">52</span><span class="srcd" style="color:var(--color-text-success)">+28%</span></div>
+      <div class="srcrow"><div class="srcico" style="background:#EBF0FF;color:#1877F2">FB</div><span class="srcnm">Facebook</span><div class="srcbw"><div class="srcbf" style="width:9%;background:#1877F2"></div></div><span class="srcc">32</span><span class="srcd" style="color:var(--color-text-secondary)">+5%</span></div>
+      <div class="srcrow"><div class="srcico" style="background:#FFF0F4;color:#E1306C">IG</div><span class="srcnm">Instagram</span><div class="srcbw"><div class="srcbf" style="width:4%;background:#E1306C"></div></div><span class="srcc">12</span><span class="srcd" style="color:var(--color-text-success)">+42%</span></div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">Ticket status distribution</div><div class="cm">Live snapshot</div></div>
+      <div class="cw" style="height:155px"><canvas id="c_so_status"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">Live ticket feed</div><div class="cm">Latest · sorted by priority</div></div>
+      <table class="tbl">
+        <tr><th>ID</th><th>Channel</th><th>Subject</th><th>Priority</th><th>Status</th></tr>
+        <tr><td>#5821</td><td>Twitter/X</td><td>Login issue</td><td><span class="pill p-danger">High</span></td><td><span class="pill p-warn">Open</span></td></tr>
+        <tr><td>#5820</td><td>Email</td><td>Invoice error</td><td><span class="pill p-warn">Med</span></td><td><span class="pill p-ok">Done</span></td></tr>
+        <tr><td>#5819</td><td>Chat</td><td>Export request</td><td><span class="pill p-neu">Low</span></td><td><span class="pill p-info">Pending</span></td></tr>
+        <tr><td>#5818</td><td>Facebook</td><td>Refund query</td><td><span class="pill p-danger">High</span></td><td><span class="pill p-warn">Open</span></td></tr>
+        <tr><td>#5817</td><td>Instagram</td><td>Product query</td><td><span class="pill p-neu">Low</span></td><td><span class="pill p-ok">Done</span></td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="card mb9">
+    <div class="ch"><div class="ct">First response time by channel · hourly</div><div class="cm">Minutes — lower is better · target 10m</div></div>
+    <div class="leg" style="margin-bottom:6px">
+      <span class="li"><span class="ls" style="background:#3266ad"></span>Email</span>
+      <span class="li"><span class="ls" style="background:#1D9E75"></span>Chat</span>
+      <span class="li"><span class="ls" style="background:#1DA1F2"></span>Twitter/X</span>
+      <span class="li"><span class="ls" style="background:#E1306C"></span>Instagram</span>
+    </div>
+    <div class="cw" style="height:150px"><canvas id="c_so_frt"></canvas></div>
+  </div>
+</div>
+
+<!-- ═══ BOT METRICS ════════════════════════════════════════════════════ -->
+<div class="sec" id="sec-bo">
+  <div class="kgrid">
+    <div class="kpi"><div class="kpi-bar" style="background:#1D9E75"></div><div class="kl">BOT sessions</div><div class="kv">1,832</div><div class="ks"><span class="up">+18%</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#639922"></div><div class="kl">Fully resolved</div><div class="kv">62%</div><div class="ks"><span class="up">+5pts</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#E24B4A"></div><div class="kl">Escalated</div><div class="kv">38%</div><div class="ks"><span class="up">↓ 5pts</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#EF9F27"></div><div class="kl">Avg BOT AHT</div><div class="kv">1:48</div><div class="ks"><span class="up">-22s</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#D4537E"></div><div class="kl">Fallback rate</div><div class="kv">8.4%</div><div class="ks"><span class="up">↓ 1.2pts</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#7F77DD"></div><div class="kl">BOT CSAT</div><div class="kv">4.2</div><div class="ks"><span class="up">+0.3</span> / 5.0</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#378ADD"></div><div class="kl">Avg turns/session</div><div class="kv">4.8</div><div class="ks">interactions</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#3266ad"></div><div class="kl">NLP confidence</div><div class="kv">91%</div><div class="ks"><span class="up">+2pts</span></div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">Containment vs escalation · hourly</div><div class="cm">% of sessions</div></div>
+      <div class="cw" style="height:165px"><canvas id="c_bo_cont"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">Top intents · volume &amp; containment</div><div class="cm">Today · sorted by volume</div></div>
+      <table class="tbl">
+        <tr><th>Intent</th><th>Sessions</th><th>Contained</th><th>Rate</th></tr>
+        <tr><td>Account balance</td><td>412</td><td>378</td><td><span class="pill p-ok">92%</span></td></tr>
+        <tr><td>Order status</td><td>318</td><td>276</td><td><span class="pill p-ok">87%</span></td></tr>
+        <tr><td>Password reset</td><td>276</td><td>198</td><td><span class="pill p-warn">72%</span></td></tr>
+        <tr><td>Billing FAQ</td><td>198</td><td>142</td><td><span class="pill p-warn">72%</span></td></tr>
+        <tr><td>Store hours</td><td>164</td><td>152</td><td><span class="pill p-ok">93%</span></td></tr>
+        <tr><td>Tech support</td><td>142</td><td>72</td><td><span class="pill p-danger">51%</span></td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">Fallback reasons</div><div class="cm">Why BOT couldn't resolve</div></div>
+      <div class="cw" style="height:155px"><canvas id="c_bo_fallback"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">Escalation trigger analysis</div><div class="cm">Why sessions went to agent</div></div>
+      <table class="tbl">
+        <tr><th>Trigger reason</th><th>Count</th><th>Share</th></tr>
+        <tr><td>Customer requested agent</td><td>248</td><td>36%</td></tr>
+        <tr><td>NLP confidence low</td><td>184</td><td>27%</td></tr>
+        <tr><td>Sentiment negative</td><td>142</td><td>21%</td></tr>
+        <tr><td>Complex billing query</td><td>64</td><td>9%</td></tr>
+        <tr><td>Max turns exceeded</td><td>48</td><td>7%</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ WORKFLOWS ══════════════════════════════════════════════════════ -->
+<div class="sec" id="sec-wf">
+  <div class="kgrid">
+    <div class="kpi"><div class="kpi-bar" style="background:#7F77DD"></div><div class="kl">Active workflows</div><div class="kv">34</div><div class="ks">configured</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#3266ad"></div><div class="kl">Triggered today</div><div class="kv">6,248</div><div class="ks"><span class="up">+9%</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#639922"></div><div class="kl">Completion rate</div><div class="kv">94.2%</div><div class="ks"><span class="up">+1.1pts</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#1D9E75"></div><div class="kl">Avg exec time</div><div class="kv">0.8s</div><div class="ks"><span class="up">-0.2s</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#E24B4A"></div><div class="kl">Failed</div><div class="kv">362</div><div class="ks"><span class="dn">5.8% error</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#EF9F27"></div><div class="kl">Auto-resolved</div><div class="kv">1,412</div><div class="ks">by AI routing</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#D4537E"></div><div class="kl">SLA alerts fired</div><div class="kv">48</div><div class="ks"><span class="up">↓ 12%</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#378ADD"></div><div class="kl">Auto-escalations</div><div class="kv">312</div><div class="ks">VIP + urgent</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">Workflow trigger volume · hourly</div><div class="cm">By type</div></div>
+      <div class="cw" style="height:175px"><canvas id="c_wf_vol"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">Workflow health status</div><div class="cm">Live · last checked 09:42</div></div>
+      <div class="wf-row"><span>Auto-ticket routing</span><span><span class="pill p-ok">Healthy</span> · 1,842 runs</span></div>
+      <div class="wf-row"><span>Escalation — VIP</span><span><span class="pill p-ok">Healthy</span> · 612 runs</span></div>
+      <div class="wf-row"><span>Sentiment flag</span><span><span class="pill p-ok">Healthy</span> · 398 runs</span></div>
+      <div class="wf-row"><span>Wrap-up auto-summary</span><span><span class="pill p-ok">Healthy</span> · 892 runs</span></div>
+      <div class="wf-row"><span>After-hours BOT fallback</span><span><span class="pill p-ok">Healthy</span> · 212 runs</span></div>
+      <div class="wf-row"><span>SLA breach alert</span><span><span class="pill p-warn">Slow</span> · 488 runs</span></div>
+      <div class="wf-row"><span>CRM sync on close</span><span><span class="pill p-danger">Error</span> · 312 fails</span></div>
+      <div class="wf-row"><span>BOT→Agent handoff</span><span><span class="pill p-ok">Healthy</span> · 696 runs</span></div>
+    </div>
+  </div>
+  <div class="card mb9">
+    <div class="ch"><div class="ct">Workflow execution time · by type</div><div class="cm">Avg seconds per run</div></div>
+    <div class="cw" style="height:150px"><canvas id="c_wf_time"></canvas></div>
+  </div>
+</div>
+
+<!-- ═══ BREAK METRICS ══════════════════════════════════════════════════ -->
+<div class="sec" id="sec-br">
+  <div class="kgrid">
+    <div class="kpi"><div class="kpi-bar" style="background:#D4537E"></div><div class="kl">On break now</div><div class="kv">9</div><div class="ks">of 56 agents</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#3266ad"></div><div class="kl">Scheduled breaks</div><div class="kv">4</div><div class="ks">pending today</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#E24B4A"></div><div class="kl">Unscheduled</div><div class="kv">3</div><div class="ks"><span class="dn">over quota</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#EF9F27"></div><div class="kl">Avg duration</div><div class="kv">12:04</div><div class="ks"><span class="dn">+2m over</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#639922"></div><div class="kl">Lunch compliance</div><div class="kv">88%</div><div class="ks">on schedule</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#1D9E75"></div><div class="kl">Aux code usage</div><div class="kv">91%</div><div class="ks"><span class="up">+4pts</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#7F77DD"></div><div class="kl">Break adherence</div><div class="kv">84%</div><div class="ks">within window</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#378ADD"></div><div class="kl">Shrinkage rate</div><div class="kv">18.2%</div><div class="ks">incl breaks+aux</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">Break type distribution</div><div class="cm">By category · today</div></div>
+      <div class="cw" style="height:160px"><canvas id="c_br_donut"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">Agents on break · live</div><div class="cm">Duration &amp; status</div></div>
+      <table class="tbl">
+        <tr><th>Agent</th><th>Type</th><th>Duration</th><th>Status</th></tr>
+        <tr><td>John D.</td><td>Lunch</td><td>18:22</td><td><span class="pill p-danger">+3m over</span></td></tr>
+        <tr><td>Meena P.</td><td>Scheduled</td><td>9:10</td><td><span class="pill p-ok">On time</span></td></tr>
+        <tr><td>Carlos R.</td><td>Bio</td><td>4:02</td><td><span class="pill p-ok">On time</span></td></tr>
+        <tr><td>Lisa T.</td><td>Training</td><td>22:45</td><td><span class="pill p-info">Training</span></td></tr>
+        <tr><td>Ahmed S.</td><td>Unscheduled</td><td>7:18</td><td><span class="pill p-danger">Flagged</span></td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">Break distribution by hour</div><div class="cm">Agents off floor</div></div>
+      <div class="cw" style="height:150px"><canvas id="c_br_hourly"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">Aux code breakdown</div><div class="cm">By reason · today</div></div>
+      <div class="cw" style="height:150px"><canvas id="c_br_aux"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ AI INSIGHTS ════════════════════════════════════════════════════ -->
+<div class="sec" id="sec-ai">
+  <div class="kgrid">
+    <div class="kpi"><div class="kpi-bar" style="background:#7F77DD"></div><div class="kl">AI suggestions used</div><div class="kv">74%</div><div class="ks"><span class="up">+8pts</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#1D9E75"></div><div class="kl">Auto-summaries</div><div class="kv">2,821</div><div class="ks">100% coverage</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#3266ad"></div><div class="kl">Emotion detections</div><div class="kv">4,821</div><div class="ks">all channels</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#E24B4A"></div><div class="kl">Coach alerts</div><div class="kv">38</div><div class="ks"><span class="up">↓ 12%</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#639922"></div><div class="kl">Wrap-up saved</div><div class="kv">2:10</div><div class="ks">per interaction</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#EF9F27"></div><div class="kl">NLP accuracy</div><div class="kv">93%</div><div class="ks"><span class="up">+2pts</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#D4537E"></div><div class="kl">Anomalies detected</div><div class="kv">7</div><div class="ks">3 active now</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#378ADD"></div><div class="kl">Predictive alerts</div><div class="kv">12</div><div class="ks">staffing signals</div></div>
+  </div>
+  <div class="ai-box">
+    <div class="ai-hdr"><div class="ai-dot"></div>Active AI signals · real-time · Apr 2 09:42</div>
+    <div class="ai-row">SLA risk: Technical queue 78% — 4 agents below target. Recommended re-route from Billing in next 8 min.</div>
+    <div class="ai-row">Sentiment spike: Chat channel negative sentiment +6pts since 09:15 AM deploy. 18 affected sessions flagged.</div>
+    <div class="ai-row">Coaching: John D. AHT +40% over 2hrs. Auto-coaching queued. Priya S. FCR dropped below 75%.</div>
+    <div class="ai-row">BOT gap: Password reset containment dropped 91%→74%. Probable KB gap — review flow recommended.</div>
+    <div class="ai-row">Volume forecast: Expect +22% call surge 11am–1pm. Current staffing 6 agents short for target SLA.</div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">AI assist adoption by agent</div><div class="cm">Suggestion acceptance %</div></div>
+      <div class="cw" style="height:165px"><canvas id="c_ai_adopt"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">Model accuracy &amp; acceptance · 7-day</div><div class="cm">Rolling trend</div></div>
+      <div class="cw" style="height:165px"><canvas id="c_ai_trend"></canvas></div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">Negative sentiment trend by channel</div><div class="cm">Hourly · % negative</div></div>
+      <div class="cw" style="height:150px"><canvas id="c_ai_sent"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">AI topic clusters · top 8 today</div><div class="cm">Volume by detected topic</div></div>
+      <div class="cw" style="height:150px"><canvas id="c_ai_topics"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ AGENTIC METRICS ════════════════════════════════════════════════ -->
+<div class="sec" id="sec-am">
+  <div class="kgrid">
+    <div class="kpi"><div class="kpi-bar" style="background:#7F77DD"></div><div class="kl">AI agent tasks</div><div class="kv">3,412</div><div class="ks"><span class="up">+24%</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#639922"></div><div class="kl">Completed</div><div class="kv">89%</div><div class="ks">autonomously</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#E24B4A"></div><div class="kl">Human escalated</div><div class="kv">11%</div><div class="ks"><span class="up">↓ 3pts</span></div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#1D9E75"></div><div class="kl">Avg task time</div><div class="kv">1:12</div><div class="ks">vs 4:30 human</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#3266ad"></div><div class="kl">Actions taken</div><div class="kv">8,924</div><div class="ks">API / lookups</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#EF9F27"></div><div class="kl">Refunds processed</div><div class="kv">$48k</div><div class="ks">auto-approved</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#D4537E"></div><div class="kl">Appts scheduled</div><div class="kv">218</div><div class="ks">by AI agent</div></div>
+    <div class="kpi"><div class="kpi-bar" style="background:#378ADD"></div><div class="kl">AI task CSAT</div><div class="kv">4.4</div><div class="ks">/ 5.0</div></div>
+  </div>
+  <div class="ai-box">
+    <div class="ai-hdr"><div class="ai-dot"></div>Agentic AI · live activity feed</div>
+    <div class="ai-row">09:41 — Billing dispute #5820 resolved autonomously · Refund $89.99 processed · CSAT 5.0</div>
+    <div class="ai-row">09:39 — 14 password reset sessions completed with 0 agent handoffs · Avg time 0:48</div>
+    <div class="ai-row">09:35 — Appointment rescheduled for customer · CRM updated · Confirmation email sent</div>
+    <div class="ai-row">09:28 — Sentiment alert → AI proactively escalated 3 negative sessions to human queue</div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">AI agent task volume · by type · hourly</div><div class="cm">Stacked by task category</div></div>
+      <div class="leg" style="margin-bottom:6px">
+        <span class="li"><span class="ls" style="background:#7F77DD"></span>Info lookup</span>
+        <span class="li"><span class="ls" style="background:#1D9E75"></span>Transactions</span>
+        <span class="li"><span class="ls" style="background:#EF9F27"></span>Scheduling</span>
+        <span class="li"><span class="ls" style="background:#E24B4A"></span>Escalated</span>
+      </div>
+      <div class="cw" style="height:155px"><canvas id="c_am_vol"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">FCR comparison · AI vs human</div><div class="cm">First contact resolution %</div></div>
+      <div class="cw" style="height:175px"><canvas id="c_am_fcr"></canvas></div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">Agentic task breakdown · today</div><div class="cm">By category · completion &amp; time</div></div>
+      <table class="tbl">
+        <tr><th>Task type</th><th>Count</th><th>Done</th><th>Rate</th><th>Avg time</th></tr>
+        <tr><td>Account info lookup</td><td>1,248</td><td>1,210</td><td><span class="pill p-ok">97%</span></td><td>0:28</td></tr>
+        <tr><td>Order status check</td><td>842</td><td>812</td><td><span class="pill p-ok">96%</span></td><td>0:34</td></tr>
+        <tr><td>Refund processing</td><td>312</td><td>276</td><td><span class="pill p-warn">88%</span></td><td>1:42</td></tr>
+        <tr><td>Appointment booking</td><td>218</td><td>198</td><td><span class="pill p-ok">91%</span></td><td>1:18</td></tr>
+        <tr><td>Password reset</td><td>414</td><td>386</td><td><span class="pill p-ok">93%</span></td><td>0:48</td></tr>
+        <tr><td>Complex escalation</td><td>378</td><td>148</td><td><span class="pill p-danger">39%</span></td><td>3:12</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">Human time saved · cumulative today</div><div class="cm">vs manual handling baseline</div></div>
+      <div class="cw" style="height:175px"><canvas id="c_am_saved"></canvas></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+<script>
+function setPeriod(btn){document.querySelectorAll('.fp').forEach(b=>b.classList.remove('on'));btn.classList.add('on')}
+const now=new Date();
+document.getElementById('clk').textContent=now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' · '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+const hrs=['8am','9am','10am','11am','12pm','1pm','2pm','3pm','4pm'];
+const days7=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const dk=matchMedia('(prefers-color-scheme:dark)').matches;
+const gc=dk?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.07)';
+const tc=dk?'#aaa':'#666';
+const tt={backgroundColor:dk?'#1c1c1a':'#fff',titleColor:dk?'#f0efe8':'#1a1a18',bodyColor:tc,borderColor:dk?'rgba(255,255,255,0.12)':'rgba(0,0,0,0.12)',borderWidth:.5};
+const xs={grid:{color:gc},ticks:{color:tc,font:{size:10}}};
+const ys={grid:{color:gc},ticks:{color:tc,font:{size:10}}};
+const bp={legend:{display:false},tooltip:{mode:'index',intersect:false,...tt}};
+const charts={};
+function mk(id,cfg){if(charts[id])charts[id].destroy();const el=document.getElementById(id);if(!el)return;charts[id]=new Chart(el,cfg);}
+
+function sw(id,btn){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('sec-'+id).classList.add('on');
+  btn.classList.add('on');
+  setTimeout(()=>draw(id),60);
+}
+
+function draw(t){
+  if(t==='ov'){
+    mk('c_ov_stack',{type:'bar',data:{labels:hrs,datasets:[
+      {label:'Voice', data:[108,178,242,228,210,162,196,240,178],backgroundColor:'#3266ad',stack:'s'},
+      {label:'Chat',  data:[32,62,84,82,78,54,68,90,64], backgroundColor:'#1D9E75',stack:'s'},
+      {label:'Email', data:[24,44,62,60,56,38,50,64,48], backgroundColor:'#EF9F27',stack:'s'},
+      {label:'Social',data:[10,18,28,24,22,16,20,28,18], backgroundColor:'#D4537E',stack:'s'},
+      {label:'SMS',   data:[6,12,18,16,14,10,16,18,12],  backgroundColor:'#7F77DD',stack:'s'},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:bp,scales:{x:{...xs,stacked:true},y:{...ys,stacked:true}},borderRadius:2,borderSkipped:false,animation:{duration:500}}});
+  }
+  if(t==='ag'){
+    mk('c_ag_donut',{type:'doughnut',data:{labels:['Available','On call','Wrap-up','Break','Offline'],datasets:[{data:[28,12,6,9,1],backgroundColor:['#639922','#3266ad','#EF9F27','#D4537E','#888780'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:true,position:'bottom',labels:{color:tc,font:{size:10},boxWidth:8}},tooltip:tt}}});
+    mk('c_ag_aht',{type:'bar',data:{labels:['Sarah','Raj','Priya','Tom','Anita','Dev','Kim','Leo'],datasets:[{label:'AHT (min)',data:[3.67,3.92,4.03,4.33,4.58,4.83,5.0,5.25],backgroundColor:['#1D9E75','#1D9E75','#1D9E75','#EF9F27','#EF9F27','#EF9F27','#E24B4A','#E24B4A'],borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:bp,scales:{x:xs,y:{...ys,min:0,ticks:{...ys.ticks,callback:v=>v.toFixed(1)+'m'}}}}});
+    mk('c_ag_csat',{type:'line',data:{labels:hrs,datasets:[{label:'CSAT',data:[4.3,4.4,4.6,4.5,4.4,4.7,4.6,4.8,4.6],borderColor:'#7F77DD',backgroundColor:'rgba(127,119,221,0.08)',fill:true,tension:.4,pointRadius:3,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:bp,scales:{x:xs,y:{...ys,min:3.5,max:5}}}});
+    mk('c_ag_occ',{type:'bar',data:{labels:['Sarah','Raj','Priya','Tom','Anita','Dev','Kim','Leo'],datasets:[
+      {label:'Handle%',data:[82,78,76,74,72,68,65,62],backgroundColor:'#3266ad',stack:'s'},
+      {label:'Avail%', data:[12,14,16,18,18,20,22,24],backgroundColor:'#1D9E75',stack:'s'},
+      {label:'Aux%',   data:[6,8,8,8,10,12,13,14],  backgroundColor:'#EF9F27',stack:'s'},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{...bp,legend:{display:true,position:'top',labels:{color:tc,font:{size:10},boxWidth:8}}},scales:{x:{...xs,stacked:true},y:{...ys,stacked:true,max:100,ticks:{...ys.ticks,callback:v=>v+'%'}}},borderRadius:2,borderSkipped:false}});
+  }
+  if(t==='ca'){
+    mk('c_ca_vol',{type:'bar',data:{labels:hrs,datasets:[
+      {label:'Inbound',    data:[148,238,312,292,278,218,262,312,238],backgroundColor:'#3266ad',stack:'s'},
+      {label:'Outbound',   data:[22,42,62,58,54,38,48,62,48],  backgroundColor:'#1D9E75',stack:'s'},
+      {label:'IVR deflect',data:[32,58,82,76,72,52,68,84,62],  backgroundColor:'#7F77DD',stack:'s'},
+      {label:'Abandoned',  data:[8,14,18,16,16,12,14,18,12],   backgroundColor:'#E24B4A',stack:'s'},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:bp,scales:{x:{...xs,stacked:true},y:{...ys,stacked:true}},borderRadius:2,borderSkipped:false}});
+    mk('c_ca_outcomes',{type:'doughnut',data:{labels:['Resolved','Transferred','Abandoned','IVR Self-serve'],datasets:[{data:[2314,187,93,642],backgroundColor:['#639922','#EF9F27','#E24B4A','#7F77DD'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'bottom',labels:{color:tc,font:{size:10},boxWidth:8}},tooltip:tt}}});
+    mk('c_ca_abandon',{type:'line',data:{labels:hrs,datasets:[
+      {label:'Abandon%',   data:[2.1,2.8,3.4,3.1,3.8,2.9,3.2,3.4,2.8],borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,0.07)',fill:true,tension:.4,pointRadius:2,borderWidth:2,yAxisID:'y'},
+      {label:'Avg wait(s)',data:[88,95,110,98,118,92,102,108,94],borderColor:'#EF9F27',tension:.4,pointRadius:2,borderWidth:1.5,borderDash:[4,3],yAxisID:'y1'},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:bp,scales:{x:xs,y:{...ys,min:0,max:6,position:'left',ticks:{...ys.ticks,callback:v=>v+'%'}},y1:{position:'right',grid:{display:false},ticks:{color:tc,font:{size:10},callback:v=>v+'s'}}}}});
+  }
+  if(t==='so'){
+    mk('c_so_vol',{type:'bar',data:{labels:hrs,datasets:[
+      {label:'Email',    data:[18,22,28,26,24,18,22,28,20],backgroundColor:'#3266ad',stack:'s'},
+      {label:'Chat',     data:[12,16,22,20,18,14,16,22,16],backgroundColor:'#1D9E75',stack:'s'},
+      {label:'Twitter',  data:[4,6,10,8,8,6,8,10,8],   backgroundColor:'#1DA1F2',stack:'s'},
+      {label:'Facebook', data:[2,4,6,5,5,4,4,6,5],    backgroundColor:'#1877F2',stack:'s'},
+      {label:'Instagram',data:[1,2,3,2,2,2,2,3,2],    backgroundColor:'#E1306C',stack:'s'},
+      {label:'WhatsApp', data:[1,1,2,2,1,1,2,2,1],    backgroundColor:'#25D366',stack:'s'},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:bp,scales:{x:{...xs,stacked:true},y:{...ys,stacked:true}},borderRadius:2,borderSkipped:false}});
+    mk('c_so_status',{type:'doughnut',data:{labels:['Open','In progress','Pending','Resolved','Escalated'],datasets:[{data:[142,98,74,218,28],backgroundColor:['#E24B4A','#EF9F27','#3266ad','#639922','#D4537E'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'bottom',labels:{color:tc,font:{size:10},boxWidth:8}},tooltip:tt}}});
+    mk('c_so_frt',{type:'line',data:{labels:hrs,datasets:[
+      {label:'Email',    data:[14,12,11,13,14,12,11,10,11],borderColor:'#3266ad',tension:.4,pointRadius:2,borderWidth:2},
+      {label:'Chat',     data:[4,3,3,4,5,3,3,3,4],    borderColor:'#1D9E75',tension:.4,pointRadius:2,borderWidth:2},
+      {label:'Twitter',  data:[22,18,16,20,24,18,16,14,16],borderColor:'#1DA1F2',tension:.4,pointRadius:2,borderWidth:2,borderDash:[4,3]},
+      {label:'Instagram',data:[35,28,24,32,38,26,24,22,26],borderColor:'#E1306C',tension:.4,pointRadius:2,borderWidth:2,borderDash:[3,3]},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:bp,scales:{x:xs,y:{...ys,min:0,ticks:{...ys.ticks,callback:v=>v+'m'}}}}});
+  }
+  if(t==='bo'){
+    mk('c_bo_cont',{type:'line',data:{labels:hrs,datasets:[
+      {label:'Contained%',data:[58,62,64,61,60,63,65,67,66],borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',fill:true,tension:.4,pointRadius:2,borderWidth:2},
+      {label:'Escalated%',data:[42,38,36,39,40,37,35,33,34],borderColor:'#E24B4A',tension:.4,pointRadius:2,borderWidth:1.5,borderDash:[4,3]},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:bp,scales:{x:xs,y:{...ys,min:0,max:100,ticks:{...ys.ticks,callback:v=>v+'%'}}}}});
+    mk('c_bo_fallback',{type:'doughnut',data:{labels:['NLP low confidence','Intent not found','Complex query','Max turns','Cust requested'],datasets:[{data:[184,148,96,48,46],backgroundColor:['#E24B4A','#EF9F27','#7F77DD','#D4537E','#3266ad'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{display:true,position:'bottom',labels:{color:tc,font:{size:9},boxWidth:8}},tooltip:tt}}});
+  }
+  if(t==='wf'){
+    mk('c_wf_vol',{type:'line',data:{labels:hrs,datasets:[
+      {label:'Ticket routing',data:[182,248,342,318,298,228,278,348,258],borderColor:'#7F77DD',tension:.4,pointRadius:2,borderWidth:2},
+      {label:'Escalation',   data:[62,84,102,94,88,68,82,104,78], borderColor:'#E24B4A',tension:.4,pointRadius:2,borderWidth:2,borderDash:[4,3]},
+      {label:'SLA alerts',   data:[4,8,12,10,8,6,8,12,8],         borderColor:'#EF9F27',tension:.4,pointRadius:2,borderWidth:1.5},
+      {label:'Wrap-up AI',   data:[82,142,182,172,162,122,148,184,142],borderColor:'#1D9E75',tension:.4,pointRadius:2,borderWidth:1.5,borderDash:[3,3]},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{...bp,legend:{display:true,position:'top',labels:{color:tc,font:{size:10},boxWidth:8}}},scales:{x:xs,y:ys}}});
+    mk('c_wf_time',{type:'bar',data:{labels:['Ticket route','VIP escalate','Sentiment flag','Wrap-up AI','BOT handoff','CRM sync','SLA alert','After-hours'],datasets:[{data:[0.3,0.8,0.4,1.2,0.6,2.4,0.5,0.4],backgroundColor:['#1D9E75','#7F77DD','#1D9E75','#7F77DD','#1D9E75','#E24B4A','#EF9F27','#1D9E75'],borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:bp,scales:{x:xs,y:{...ys,ticks:{...ys.ticks,callback:v=>v+'s'}}}}});
+  }
+  if(t==='br'){
+    mk('c_br_donut',{type:'doughnut',data:{labels:['Scheduled','Lunch','Bio','Training','Unscheduled'],datasets:[{data:[18,12,8,6,3],backgroundColor:['#3266ad','#EF9F27','#1D9E75','#7F77DD','#E24B4A'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'bottom',labels:{color:tc,font:{size:10},boxWidth:8}},tooltip:tt}}});
+    mk('c_br_hourly',{type:'bar',data:{labels:hrs,datasets:[{label:'Agents on break',data:[2,3,4,5,14,6,4,4,3],backgroundColor:'#EF9F27',borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:bp,scales:{x:xs,y:ys}}});
+    mk('c_br_aux',{type:'bar',data:{labels:['Break','Lunch','Training','Meeting','Personal','System','Coaching','Admin'],datasets:[{data:[48,38,24,18,12,8,6,4],backgroundColor:'#7F77DD',borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:bp,scales:{x:xs,y:ys},indexAxis:'y'}});
+  }
+  if(t==='ai'){
+    mk('c_ai_adopt',{type:'bar',data:{labels:['Sarah','Raj','Priya','Tom','Anita','Dev'],datasets:[{data:[88,82,79,74,71,64],backgroundColor:['#7F77DD','#7F77DD','#7F77DD','#EF9F27','#EF9F27','#E24B4A'],borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:bp,scales:{x:xs,y:{...ys,min:0,max:100,ticks:{...ys.ticks,callback:v=>v+'%'}}}}});
+    mk('c_ai_trend',{type:'line',data:{labels:days7,datasets:[
+      {label:'NLP accuracy',      data:[89,90,91,91,92,93,93],borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',fill:true,tension:.4,pointRadius:3,borderWidth:2},
+      {label:'Suggestion accept%',data:[68,70,72,73,74,74,75],borderColor:'#EF9F27',tension:.4,pointRadius:3,borderWidth:1.5,borderDash:[4,3]},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{...bp,legend:{display:true,position:'top',labels:{color:tc,font:{size:10},boxWidth:8}}},scales:{x:xs,y:{...ys,min:50,max:100,ticks:{...ys.ticks,callback:v=>v+'%'}}}}});
+    mk('c_ai_sent',{type:'line',data:{labels:hrs,datasets:[
+      {label:'Voice neg%', data:[10,11,12,11,12,11,11,10,10],borderColor:'#3266ad',tension:.4,pointRadius:2,borderWidth:2},
+      {label:'Chat neg%',  data:[14,15,18,17,20,18,19,20,18],borderColor:'#1D9E75',tension:.4,pointRadius:2,borderWidth:2},
+      {label:'Social neg%',data:[24,26,30,28,32,30,28,29,27],borderColor:'#D4537E',tension:.4,pointRadius:2,borderWidth:2,borderDash:[4,3]},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{...bp,legend:{display:true,position:'top',labels:{color:tc,font:{size:10},boxWidth:8}}},scales:{x:xs,y:{...ys,min:0,ticks:{...ys.ticks,callback:v=>v+'%'}}}}});
+    mk('c_ai_topics',{type:'bar',data:{labels:['Billing','Login','Refund','Shipping','Product','Password','Account','Other'],datasets:[{data:[412,318,248,198,182,164,142,428],backgroundColor:['#E24B4A','#EF9F27','#7F77DD','#3266ad','#1D9E75','#D4537E','#639922','#888780'],borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:bp,scales:{x:xs,y:ys}}});
+  }
+  if(t==='am'){
+    mk('c_am_vol',{type:'bar',data:{labels:hrs,datasets:[
+      {label:'Info lookup', data:[148,228,312,288,272,208,256,316,228],backgroundColor:'#7F77DD',stack:'s'},
+      {label:'Transaction', data:[42,68,92,86,80,62,76,94,72],  backgroundColor:'#1D9E75',stack:'s'},
+      {label:'Scheduling',  data:[18,28,38,34,32,24,30,38,28],  backgroundColor:'#EF9F27',stack:'s'},
+      {label:'Escalated',   data:[12,18,24,22,20,16,18,24,18],  backgroundColor:'#E24B4A',stack:'s'},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:bp,scales:{x:{...xs,stacked:true},y:{...ys,stacked:true}},borderRadius:2,borderSkipped:false}});
+    mk('c_am_fcr',{type:'bar',data:{labels:['AI agent','Human agent'],datasets:[{data:[89,78],backgroundColor:['#7F77DD','#3266ad'],borderRadius:6,borderSkipped:false,barPercentage:.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:bp,scales:{x:xs,y:{...ys,min:0,max:100,ticks:{...ys.ticks,callback:v=>v+'%'}}}}});
+    mk('c_am_saved',{type:'line',data:{labels:hrs,datasets:[{label:'Hours saved',data:[12,28,48,66,82,94,108,126,140],borderColor:'#7F77DD',backgroundColor:'rgba(127,119,221,0.08)',fill:true,tension:.4,pointRadius:3,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:bp,scales:{x:xs,y:{...ys,ticks:{...ys.ticks,callback:v=>v+'h'}}}}});
+  }
+}
+
+setTimeout(()=>draw('ov'),150);
+</script>
+</body>
+</html>
