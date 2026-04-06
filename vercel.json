@@ -1,6 +1,11 @@
 {
+  "builds": [
+    {
+      "src": "*.html",
+      "use": "@vercel/static"
+    }
+  ],
   "routes": [
-    { "handle": "filesystem" },
     { "src": "/", "dest": "/nextiva_full_dashboard_v3.html" }
   ]
 }
